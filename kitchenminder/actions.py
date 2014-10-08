@@ -26,7 +26,7 @@ class KitchenMinderActions(object):
         self.audio.play('msgPleasePushButton', interval=self.interval)
         self.display.setMessage('Cooker\nOFF', 'red', timeout=self.timeout)
     def msgDeviceMissing(self):
-        self.audio.play('msgDeviceMissing', interval=30)
+        self.audio.play('msgDeviceMissing', interval=self.interval)
         self.display.setMessage('Kitchen Minder\nis not working\n\nPlease wait...', 'white', showFooter=False)
     def msgSplashScreen(self):
         self.display.setMessage('msgSplashScreen', 'green')
