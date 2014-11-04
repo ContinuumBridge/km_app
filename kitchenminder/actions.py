@@ -4,7 +4,6 @@ class KitchenMinderActions(object):
         self.audio = audio
         self.switch = switch
         self.interval = 30
-        self.timeout = 600
     def resetAudioCount(self):
         self.audio.reset()
     def turnSupplyOff(self):
@@ -13,18 +12,18 @@ class KitchenMinderActions(object):
         self.switch.switchOn()
     def msgPowerOff(self):
         self.audio.play('msgPowerOff', interval=self.interval)
-        self.display.setMessage('Cooker\nOFF', 'red', timeout=self.timeout)
+        self.display.setMessage('Cooker\nOFF', 'red')
     def msgPowerOn(self):
         self.audio.play('msgPowerOn', interval=self.interval)
-        self.display.setMessage('Cooker\nReady', 'green', timeout=self.timeout)
+        self.display.setMessage('Cooker\nReady', 'green', timeout=10)
     def msgSmokePleaseWait(self):
         self.audio.play('msgSmokePleaseWait', interval=self.interval)
-        self.display.setMessage('Cooker\nOFF', 'red', timeout=self.timeout)
+        self.display.setMessage('Cooker\nOFF', 'red')
     def msgBlankScreen(self):
         self.display.setMessage('')
     def msgPleasePushButton(self):
         self.audio.play('msgPleasePushButton', interval=self.interval)
-        self.display.setMessage('Cooker\nOFF', 'red', timeout=self.timeout)
+        self.display.setMessage('Cooker\nOFF', 'red')
     def msgDeviceMissing(self):
         self.audio.play('msgDeviceMissing', interval=self.interval)
         self.display.setMessage('Kitchen Minder\nis not working\n\nPlease wait...', 'white', showFooter=False)
