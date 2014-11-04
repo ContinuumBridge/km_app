@@ -17,6 +17,9 @@ class KitchenMinderAudio(object):
         self.reset()
 
     def reset(self):
+        """
+        Clears the audio state
+        """
         self.count = 0
         for f in self.audiofiles.values():
             f['lastplayed'] = 0
