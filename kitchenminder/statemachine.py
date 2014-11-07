@@ -9,6 +9,8 @@ class KitchenMinderStateMachine(Fysom):
 
     def onchangestateSupplyOff(self, e):
         self.actions.turnSupplyOff()
+
+    def onenterSupplyOff(self, e):
         self.actions.msgPowerOff()
 
     def onchangestateSupplyOn(self, e):
