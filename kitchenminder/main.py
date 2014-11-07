@@ -40,7 +40,7 @@ class KitchenMinder(object):
         Expect this to be called periodically to allow the kitchen minder to
         handle time-based updates.
         """
-        self.display.update()
+        pass
 
     def _handleEvent(self, event):
         """

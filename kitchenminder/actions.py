@@ -15,7 +15,7 @@ class KitchenMinderActions(object):
         self.display.setMessage('Cooker\nOFF', 'red')
     def msgPowerOn(self):
         self.audio.play('msgPowerOn', interval=self.interval)
-        self.display.setMessage('Cooker\nReady', 'green', timeout=10)
+        self.display.setMessage('Cooker\nReady', 'green')
     def msgSmokePleaseWait(self):
         self.audio.play('msgSmokePleaseWait', interval=self.interval)
         self.display.setMessage('Cooker\nOFF', 'red')
