@@ -24,7 +24,7 @@ class KitchenMinderAudio(object):
         for f in self.audiofiles.values():
             f['lastplayed'] = 0
 
-    def play(self, audio, interval, maxcount=2):
+    def play(self, audio, interval, maxcount=3):
         if not self.audiofiles.has_key(audio):
             logging.debug("Audio:No audio file:" + audio)
             return
