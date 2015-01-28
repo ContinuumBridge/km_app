@@ -141,7 +141,7 @@ class App(CbApp):
                 self.switchId = serviceid
                 self._requestData(serviceid, ['connected'], [0])
                 logging.debug("%s SWITCH FOUND %s", ModuleName, str(self.switchId))
-            else:
+            elif not services.has_key("gpio"):
                 self.smokeId = serviceid
                 self._requestData(serviceid, ['binary_sensor', 'battery', 'connected'], [0, 0, 0])
                 logging.debug("%s SMOKE DETECTOR FOUND %s", ModuleName, str(self.smokeId))
