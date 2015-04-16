@@ -2,7 +2,6 @@ from statemachine import KitchenMinderStateMachine
 from display import KitchenMinderDisplay
 from actions import KitchenMinderActions
 from audio import KitchenMinderAudio
-import logging
 
 class KitchenMinder(object):
     """
@@ -19,12 +18,15 @@ class KitchenMinder(object):
             useFramebuffer  whether or not to use the framebuffer for display
         """
         self.display = KitchenMinderDisplay(useFramebuffer)
-        logging.debug("Initialised display")
+        self.display.cbLog = self.cbLog
+        self.cbLog("debug", "Initialised display")
         self.audio = KitchenMinderAudio()
-        logging.debug("Initialised audio")
+        self.audio.cbLog = self.cbLog
+        self.cbLog("debug", "Initialised audio")
 
         actions = KitchenMinderActions(self.display, self.audio, switch)
         self.km = KitchenMinderStateMachine(actions, 'Start')
+        self.km.cbLog = self.cbLog
         self.km.Boot()
 
     def addEvent(self, event):

@@ -1,4 +1,4 @@
-import pygame, os, time, logging
+import pygame, os, time
 
 class KitchenMinderAudio(object):
     def __init__(self):
@@ -13,7 +13,7 @@ class KitchenMinderAudio(object):
         for f in files:
             file = basedir + f
             self.audiofiles[f.split('.')[0]] = {'audio': pygame.mixer.Sound(file), 'lastplayed': 0}
-            logging.debug("Audio:Loaded audio:" + file)
+            self.cbLog("debug", "Audio:Loaded audio: " + str(file))
         self.reset()
 
     def reset(self):
@@ -26,16 +26,16 @@ class KitchenMinderAudio(object):
 
     def play(self, audio, interval):
         if not self.audiofiles.has_key(audio):
-            logging.debug("Audio:No audio file:" + audio)
+            self.cbLog("debug", "Audio: No audio file: " + str(audio))
             return
 
         now = time.time()
         if self.audiofiles[audio]['lastplayed'] + interval > now:
-            logging.debug("Audio:Playing within the interval so not repeated")
+            self.cbLog("debug", "Audio: Playing within the interval so not repeated")
             return
 
         self.channel.stop()
-        logging.debug("Audio:Playing:" + audio)
+        self.cbLog("debug", "Audio:Playing: " + str(audio))
         self.channel.play(self.audiofiles[audio]['audio'])
         self.audiofiles[audio]['lastplayed'] = now
         self.count += 1

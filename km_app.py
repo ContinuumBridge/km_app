@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-ModuleName = "km_app"
+ModuleName          = "km_app"
+SEND_DELAY          = 3
+CID                 = "CID71"
 
-import sys, logging, requests, json, time
+import sys, json, time
 from twisted.internet import task
 from twisted.internet import reactor
 
@@ -11,70 +13,76 @@ from cbconfig import *
 
 from kitchenminder.cb import CbKitchenMinder
 
+class Client():
+    def __init__(self, aid):
+        self.aid = aid
+        self.count = 0
+        self.messages = []
+
+    def send(self, data):
+        message = {
+                   "source": self.aid,
+                   "destination": CID,
+                   "body": data
+                  }
+        message["body"]["n"] = self.count
+        self.count += 1
+        self.messages.append(message)
+        self.sendMessage(message, "conc")
+
+    def receive(self, message):
+        #self.cbLog("debug", "Message from client: " + str(message))
+        if "body" in message:
+            if "n" in message["body"]:
+                #self.cbLog("debug", "Received ack from client: " + str(message["body"]["n"]))
+                for m in self.messages:
+                    if m["body"]["n"] == m:
+                        self.messages.remove(m)
+                        self.cbLog("debug", "Removed message " + str(m) + " from queue")
+        else:
+            self.cbLog("warning", "Received message from client with no body")
+
 class DataManager:
     """ Managers data storage for all sensors """
-    def __init__(self, bridgeId):
-        self.baseurl = "http://geras.1248.io/series/" + bridgeId + "/"
-        self.user = "ea2f0e06ff8123b7f46f77a3a451731a"
-        self.delay = 20 # Time to gather values for a device before sending them
-        self.s = {}
-        self.waiting = []
+    def __init__(self, bridge_id):
+        self.baseAddress = bridge_id + "/"
+        self.s = []
+        self.waiting = False
 
-    def sendValuesThread(self, values, deviceId):
-        url = self.baseurl + deviceId
-        status = 0
-        logging.debug("%s ===> Geras, device: %s : %s", ModuleName, deviceId, str(values))
-        headers = {'Content-Type': 'application/json'}
-        try:
-            r = requests.post(url, auth=(self.user, ''),
-                              data=json.dumps({"e": values}), headers=headers)
-            status = r.status_code
-            success = True
-        except:
-            success = False
-        if status !=200 or not success:
-            logging.debug("%s sendValues failed, status: %s", ModuleName, status)
-            # On error, store the values that weren't sent ready to be sent again
-            reactor.callFromThread(self.storeValues, values, deviceId)
+    def sendValues(self):
+        msg = {"m": "data",
+               "d": self.s
+               }
+        self.cbLog("debug", "sendValues. Sending: " + str(msg))
+        self.client.send(msg)
+        self.s = []
+        self.waiting = False
 
-    def sendValues(self, deviceId):
-        values = self.s[deviceId]
-        # Call in thread as it may take a second or two
-        self.waiting.remove(deviceId)
-        del self.s[deviceId]
-        reactor.callInThread(self.sendValuesThread, values, deviceId)
-
-    def storeValues(self, values, deviceId):
-        if not deviceId in self.s:
-            self.s[deviceId] = values
-        else:
-            self.s[deviceId].append(values)
-        if not deviceId in self.waiting:
-            reactor.callLater(self.delay, self.sendValues, deviceId)
-            self.waiting.append(deviceId)
+    def storeValues(self, values):
+        self.s.append(values)
+        if not self.waiting:
+            self.waiting = True
+            reactor.callLater(SEND_DELAY, self.sendValues)
 
     events = ['Boot', 'Smoke', 'NoSmoke', 'SwitchPressed',
               'Connected', 'NotConnected', 'Movement']
 
     def storeEvent(self, timeStamp, event):
-        logging.debug("%s --->Geras event: %s %s", ModuleName, timeStamp, event)
+        self.cbLog("debug", "storeEvent: " + event)
         assert event in DataManager.events
-        values = [{"n":event, "v":0, "t":timeStamp-1}]
-        self.storeValues(values, 'KM')
-        values = [{"n":event, "v":1, "t":timeStamp}]
-        self.storeValues(values, 'KM')
-        values = [{"n":event, "v":0, "t":timeStamp+1}]
-        self.storeValues(values, 'KM')
+        values = {"name": self.baseAddress + "km/" + event,
+                  "points": [[int(timeStamp*1000), DataManager.events.index(event)+1]]
+                 }
+        self.storeValues(values)
 
-    def storeBattery(self, timeStamp, level):
-        logging.debug("%s --->Geras battery: %s %s", ModuleName, timeStamp, level)
-        values = [{"n":"level", "v":level, "t":timeStamp}]
-        self.storeValues(values, 'Battery')
+    def storeBattery(self, timeStamp, v):
+        values = {"name": self.baseAddress + "km/" + "battery",
+                  "points": [[int(timeStamp*1000), v]]
+                 }
+        self.storeValues(values)
 
 class App(CbApp):
     def __init__(self, argv):
-        logging.basicConfig(filename=CB_LOGFILE,level=CB_LOGGING_LEVEL,format='%(asctime)s %(levelname)s: %(message)s')
-        logging.debug("%s -------Started App---------", ModuleName)
         self.smokeId = None
         self.switchId = None
         self.gpioId = None
@@ -100,10 +108,9 @@ class App(CbApp):
 
     def _requestData(self, serviceid, services, intervals):
         if serviceid == None:
-            logging.debug("%s requestData, serviceid not set", ModuleName)
+            self.cbLog("debug", "requestData, serviceid not set")
             return
-        logging.debug("%s <----- requestData: %s @ %s", ModuleName, str(services),
-                      str(intervals))
+        self.cbLog("debug", "<----- requestData: " + str(services) + " @ " + str(intervals))
         sreqs = []
         assert len(services) == len(intervals)
         for s, i in zip(services, intervals):
@@ -125,40 +132,41 @@ class App(CbApp):
 
     def _sendData(self, serviceid, data):
         if serviceid == None:
-            logging.debug("%s sendData, serviceid not set", ModuleName)
+            self.cbLog("debug", "sendData, serviceid not set")
             return
-        logging.debug("%s -----> sendData: %s", ModuleName, data)
+        self.cbLog("debug", "-----> sendData: " + str(data))
         cmd = {'id': self.id, 'request': 'command', 'data': data}
         self.sendMessage(cmd, serviceid)
 
     # Functions called automagically by CB framework
     def onAdaptorService(self, msg):
-        logging.debug("%s Service msg: %s", ModuleName, msg)
+        self.cbLog("debug", "Service msg: " + str(msg))
         (services, serviceid) = self._parseServices(msg)
-        logging.debug("%s Service Id:%s %s", ModuleName, str(serviceid), str(services))
+        self.cbLog("debug", "Service Id: " + str(serviceid) + " " + str(services))
         if services.has_key('binary_sensor'):
             if services.has_key('switch'):
                 self.switchId = serviceid
                 self._requestData(serviceid, ['connected'], [0])
-                logging.debug("%s SWITCH FOUND %s", ModuleName, str(self.switchId))
+                self.cbLog("debug", "SWITCH FOUND: " + str(self.switchId))
             elif not services.has_key("gpio"):
                 self.smokeId = serviceid
                 self._requestData(serviceid, ['binary_sensor', 'battery', 'connected'], [0, 0, 0])
-                logging.debug("%s SMOKE DETECTOR FOUND %s", ModuleName, str(self.smokeId))
+                self.cbLog("debug", "SMOKE DETECTOR FOUND: " + str(self.smokeId))
         if services.has_key('gpio'):
             self.gpioId = serviceid
             self._requestData(serviceid, ['gpio'], [0])
-            logging.debug("%s GPIO FOUND %s", ModuleName, str(self.gpioId))
+            self.cbLog("debug", "GPIO FOUND: " + str(self.gpioId))
         if self.smokeId != None and self.switchId != None and self.gpioId != None:
             self.km = CbKitchenMinder(self)
+            self.km.cbLog = self.cbLog
             t = task.LoopingCall(self.km.update)
             t.start(1.0)
             self._setState('running')
-            logging.debug("%s -------Started KM---------", ModuleName)
+            self.cbLog("debug", " -------Started KM---------")
 
     def onAdaptorData(self, msg):
+        self.cbLog("debug", "onAdaptorData,  message: " + str(msg))
         if self.km:
-            logging.debug("%s Data %s message: %s", ModuleName, self.id, str(msg))
             event = None
             if self._getId(msg) == self.smokeId:
                 timeStamp = self._getTS(msg)
@@ -209,11 +217,16 @@ class App(CbApp):
                     self.km.addEvent(event)
                     self.dm.storeEvent(timeStamp, event)
             else:
-                logging.debug("%s Unhandled data:%s", ModuleName, str(msg))
+                self.cbLog("debug", "Unhandled data: " + str(msg))
 
     def onConfigureMessage(self, config):
-        logging.debug("%s onConfigureMessage, config: %s", ModuleName, config)
+        self.cbLog("debug", "onConfigureMessage, config: " + str(config))
+        self.client = Client(self.id)
+        self.client.sendMessage = self.sendMessage
+        self.client.cbLog = self.cbLog
         self.dm = DataManager(self.bridge_id)
+        self.dm.cbLog = self.cbLog
+        self.dm.client = self.client
         self.dm.storeEvent(time.time(), 'Boot')
 
 App(sys.argv)
