@@ -17,11 +17,9 @@ class KitchenMinder(object):
 
             useFramebuffer  whether or not to use the framebuffer for display
         """
-        self.display = KitchenMinderDisplay(useFramebuffer)
-        self.display.cbLog = cbLog
+        self.display = KitchenMinderDisplay(cbLog, useFramebuffer)
         cbLog("debug", "Initialised display")
-        self.audio = KitchenMinderAudio()
-        self.audio.cbLog = cbLog
+        self.audio = KitchenMinderAudio(cbLog)
         cbLog("debug", "Initialised audio")
 
         actions = KitchenMinderActions(self.display, self.audio, switch)
