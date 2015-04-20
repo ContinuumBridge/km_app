@@ -26,7 +26,7 @@ class KitchenMinder(object):
 
         actions = KitchenMinderActions(self.display, self.audio, switch)
         self.km = KitchenMinderStateMachine(actions, 'Start')
-        :elf.km.Boot()
+        self.km.Boot()
 
     def addEvent(self, event):
         """
