@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-ModuleName          = "km_app"
-SEND_DELAY          = 3
-CID                 = "CID71"
+ModuleName         = "km_app"
+SEND_DELAY         = 3
+CID                = "CID71"
 
 import sys, json, time
 from twisted.internet import task
