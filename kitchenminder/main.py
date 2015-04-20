@@ -19,10 +19,10 @@ class KitchenMinder(object):
         """
         self.display = KitchenMinderDisplay(useFramebuffer)
         self.display.cbLog = cbLog
-        self.cbLog("debug", "Initialised display")
+        cbLog("debug", "Initialised display")
         self.audio = KitchenMinderAudio()
         self.audio.cbLog = cbLog
-        self.cbLog("debug", "Initialised audio")
+        cbLog("debug", "Initialised audio")
 
         actions = KitchenMinderActions(self.display, self.audio, switch)
         self.km = KitchenMinderStateMachine(actions, 'Start')
