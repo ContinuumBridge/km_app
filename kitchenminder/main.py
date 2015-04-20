@@ -9,7 +9,7 @@ class KitchenMinder(object):
     display, audio and given z-wave switch components.
     """
 
-    def __init__(self, switch, useFramebuffer=True):
+    def __init__(self, switch, cbLog, useFramebuffer=True):
         """
         Construct a kitchen minder
         Arguments:
@@ -18,16 +18,15 @@ class KitchenMinder(object):
             useFramebuffer  whether or not to use the framebuffer for display
         """
         self.display = KitchenMinderDisplay(useFramebuffer)
-        self.display.cbLog = switch.cbLog
+        self.display.cbLog = cbLog
         self.cbLog("debug", "Initialised display")
         self.audio = KitchenMinderAudio()
-        self.audio.cbLog = switch.cbLog
+        self.audio.cbLog = cbLog
         self.cbLog("debug", "Initialised audio")
 
         actions = KitchenMinderActions(self.display, self.audio, switch)
         self.km = KitchenMinderStateMachine(actions, 'Start')
-        self.km.cbLog = switch.cbLog
-        self.km.Boot()
+        :elf.km.Boot()
 
     def addEvent(self, event):
         """

@@ -6,7 +6,8 @@ from text_lines import TextLines
 FOOTER_HEIGHT = 50
 
 class KitchenMinderDisplay(object):
-    def __init__(self, useFramebuffer=True):
+    def __init__(self, cbLog, useFramebuffer=True):
+        self.cbLog = cbLog
         if useFramebuffer:
             os.putenv('SDL_VIDEODRIVER', 'fbcon')
             os.putenv("SDL_FBDEV",  "/dev/fb1")

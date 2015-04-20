@@ -1,7 +1,8 @@
 import pygame, os, time
 
 class KitchenMinderAudio(object):
-    def __init__(self):
+    def __init__(self, cbLog):
+        self.cbLog = cbLog
         pygame.mixer.init()
         self.channel = pygame.mixer.Channel(0)
         self.audiofiles = {}
