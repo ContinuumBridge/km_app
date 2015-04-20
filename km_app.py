@@ -156,8 +156,9 @@ class App(CbApp):
             self.gpioId = serviceid
             self._requestData(serviceid, ['gpio'], [0])
             self.cbLog("debug", "GPIO FOUND: " + str(self.gpioId))
-        if self.smokeId != None and self.switchId != None and self.gpioId != None:
-            self.km = CbKitchenMinder(self, self.cbLog)
+        #if self.smokeId != None and self.switchId != None and self.gpioId != None:
+        if True:
+            self.km = CbKitchenMinder(self)
             t = task.LoopingCall(self.km.update)
             t.start(1.0)
             self._setState('running')

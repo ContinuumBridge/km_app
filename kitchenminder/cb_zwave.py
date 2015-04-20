@@ -5,11 +5,11 @@ class ZWaveSwitch(object):
         self.app = app
 
     def switchOn(self):
-        logging.debug("Switch on requested")
+        self.cbLog("debug", "Switch on requested")
         self.app._sendData(self.app.switchId, 'on')
-        logging.debug("Switch on sent to app")
+        self.cbLog("debug", "Switch on sent to app")
 
     def switchOff(self):
-        logging.debug("Switch off requested")
+        self.cbLog("debug", "Switch off requested")
         self.app._sendData(self.app.switchId, 'off')
-        logging.debug("Switch off sent to app")
+        self.cbLog("debug", "Switch off sent to app")
