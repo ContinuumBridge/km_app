@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ModuleName         = "km_app"
-SEND_DELAY         = 3
+SEND_DELAY         = 1
 CID                = "CID71"
 
 import sys, json, time
@@ -71,9 +71,17 @@ class DataManager:
         self.cbLog("debug", "storeEvent: " + event)
         assert event in DataManager.events
         values = {"name": self.baseAddress + "km/" + event,
-                  "points": [[int(timeStamp*1000), DataManager.events.index(event)+1]]
+                  "points": [[int(timeStamp*1000), 1]]
                  }
         self.storeValues(values)
+        if event == "Smoke" or event == "NoSmoke":
+            msg["m"] = "alarm"
+            if event == "Smoke":
+                msg["a"] = "Smoke detected by Kitchen Minder"
+            else:
+                msg["a"] = "Smoke cleared"
+            self.cbLog("debug", "storeEvent. Sending: " + json.dumps(msg, indent=4))
+            self.client.send(msg)
 
     def storeBattery(self, timeStamp, v):
         values = {"name": self.baseAddress + "km/" + "battery",
@@ -116,6 +124,7 @@ class App(CbApp):
         for s, i in zip(services, intervals):
             sreqs.append({'characteristic': s, 'interval': i})
         req = {'id': self.id, 'request': 'service', 'service': sreqs}
+        self.cbLog("debug", "requestData sending: " + json.dumps(req, indent=4))
         self.sendMessage(req, serviceid)
 
     def _getId(self, msg):
@@ -166,6 +175,15 @@ class App(CbApp):
 
     def onAdaptorData(self, msg):
         self.cbLog("debug", "onAdaptorData,  message: " + str(msg))
+        event = "Smoke"
+        if True:
+            msg["m"] = "alarm"
+            if event == "Smoke":
+                msg["a"] = "Smoke detected by Kitchen Minder"
+            else:
+                msg["a"] = "Smoke cleared"
+            self.cbLog("debug", "storeEvent. Sending: " + json.dumps(msg, indent=4))
+            self.client.send(msg)
         if self.km:
             event = None
             if self._getId(msg) == self.smokeId:
