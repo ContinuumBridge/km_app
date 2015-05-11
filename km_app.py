@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-ModuleName         = "km_app"
-SEND_DELAY         = 1
-CID                = "CID71"
+SEND_DELAY                      = 1
+CID                             = "CID71"
+SMOKE_BEFORE_SECOND_ALARM_TIME  = 120
 
 import sys, json, time
 from twisted.internet import task
@@ -29,6 +29,7 @@ class Client():
         self.count += 1
         self.messages.append(message)
         self.sendMessage(message, "conc")
+        self.cbLog("debug", "client sending: " + json.dumps(message, indent=4))
 
     def receive(self, message):
         #self.cbLog("debug", "Message from client: " + str(message))
@@ -45,9 +46,12 @@ class Client():
 class DataManager:
     """ Managers data storage for all sensors """
     def __init__(self, bridge_id):
+        self.bridge_id = bridge_id
         self.baseAddress = bridge_id + "/"
         self.s = []
         self.waiting = False
+        self.smokeTime = 0
+        self.noSmokeTime = 0
 
     def sendValues(self):
         msg = {"m": "data",
@@ -74,15 +78,21 @@ class DataManager:
                   "points": [[int(timeStamp*1000), 1]]
                  }
         self.storeValues(values)
-        if event == "Smoke" or event == "NoSmoke":
-            msg = {}
-            msg["m"] = "alarm"
-            if event == "Smoke":
-                msg["a"] = "Smoke detected by Kitchen Minder"
-            else:
-                msg["a"] = "Smoke cleared"
-            self.cbLog("debug", "storeEvent. Sending: " + json.dumps(msg, indent=4))
-            self.client.send(msg)
+        now = time.time()
+        if event == "Smoke":
+            if now - self.smokeTime > SMOKE_BEFORE_SECOND_ALARM_TIME:
+                self.smokeTime = now
+                alarm = {"m": "alarm",
+                         "a": "Smoke detected by Kitchen Minder " + self.bridge_id
+                        }
+                self.client.send(alarm)
+        if event == "NoSmoke":
+            if now - self.noSmokeTime > SMOKE_BEFORE_SECOND_ALARM_TIME:
+                self.noSmokeTime = now
+                alarm = {"m": "alarm",
+                         "a": "Kitchen minder " + self.bridge_id + ". Smoke cleared"
+                        }
+                self.client.send(alarm)
 
     def storeBattery(self, timeStamp, v):
         values = {"name": self.baseAddress + "km/" + "battery",
