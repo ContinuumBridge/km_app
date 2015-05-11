@@ -75,6 +75,7 @@ class DataManager:
                  }
         self.storeValues(values)
         if event == "Smoke" or event == "NoSmoke":
+            msg = {}
             msg["m"] = "alarm"
             if event == "Smoke":
                 msg["a"] = "Smoke detected by Kitchen Minder"
