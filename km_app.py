@@ -72,7 +72,7 @@ class DataManager:
               'Connected', 'NotConnected', 'Movement']
 
     def storeEvent(self, timeStamp, event):
-        self.cbLog("debug", "storeEvent: " + event)
+        self.cbLog("debug", "storeEvent dbug 1: " + event)
         assert event in DataManager.events
         values = {"name": self.baseAddress + "km/" + event,
                   "points": [[int(timeStamp*1000), 1]]
@@ -187,14 +187,6 @@ class App(CbApp):
     def onAdaptorData(self, msg):
         self.cbLog("debug", "onAdaptorData,  message: " + str(msg))
         event = "Smoke"
-        if True:
-            msg["m"] = "alarm"
-            if event == "Smoke":
-                msg["a"] = "Smoke detected by Kitchen Minder"
-            else:
-                msg["a"] = "Smoke cleared"
-            self.cbLog("debug", "storeEvent. Sending: " + json.dumps(msg, indent=4))
-            self.client.send(msg)
         if self.km:
             event = None
             if self._getId(msg) == self.smokeId:
