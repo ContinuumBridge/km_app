@@ -83,6 +83,7 @@ class DataManager:
             if now - self.smokeTime > SMOKE_BEFORE_SECOND_ALARM_TIME:
                 self.smokeTime = now
                 alarm = {"m": "alarm",
+                         "t": now,
                          "a": "Smoke detected by Kitchen Minder " + self.bridge_id
                         }
                 self.client.send(alarm)
@@ -90,6 +91,7 @@ class DataManager:
             if now - self.noSmokeTime > SMOKE_BEFORE_SECOND_ALARM_TIME:
                 self.noSmokeTime = now
                 alarm = {"m": "alarm",
+                         "t": now,
                          "a": "Kitchen minder " + self.bridge_id + ". Smoke cleared"
                         }
                 self.client.send(alarm)
