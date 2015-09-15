@@ -169,21 +169,22 @@ class App(CbApp):
             if services.has_key('switch'):
                 self.switchId = serviceid
                 self._requestData(serviceid, ['connected'], [0])
-                self.cbLog("debug", "SWITCH FOUND: " + str(self.switchId))
+                self.cbLog("info", "SWITCH FOUND: " + str(self.switchId))
             elif not services.has_key("gpio"):
                 self.smokeId = serviceid
                 self._requestData(serviceid, ['binary_sensor', 'battery', 'connected'], [0, 0, 0])
-                self.cbLog("debug", "SMOKE DETECTOR FOUND: " + str(self.smokeId))
+                self.cbLog("info", "SMOKE DETECTOR FOUND: " + str(self.smokeId))
         if services.has_key('gpio'):
             self.gpioId = serviceid
             self._requestData(serviceid, ['gpio'], [0])
-            self.cbLog("debug", "GPIO FOUND: " + str(self.gpioId))
-        if self.smokeId != None and self.switchId != None and self.gpioId != None:
+            self.cbLog("info", "GPIO FOUND: " + str(self.gpioId))
+        if self.smokeId != None and self.switchId != None and self.gpioId != None and not self.km:
             self.km = CbKitchenMinder(self)
-            t = task.LoopingCall(self.km.update)
-            t.start(1.0)
+            # km.update not implemented yet & LoopingCall has been problematic. Commented-out.
+            #t = task.LoopingCall(self.km.update)
+            #t.start(1.0)
             self._setState('running')
-            self.cbLog("debug", " -------Started KM---------")
+            self.cbLog("info", " -------Started KM---------")
 
     def onAdaptorData(self, msg):
         self.cbLog("debug", "onAdaptorData,  message: " + str(msg))
