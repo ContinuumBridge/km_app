@@ -178,13 +178,14 @@ class App(CbApp):
             self.gpioId = serviceid
             self._requestData(serviceid, ['gpio'], [0])
             self.cbLog("info", "GPIO FOUND: " + str(self.gpioId))
-        if self.smokeId != None and self.switchId != None and self.gpioId != None and not self.km:
+        if self.smokeId and self.switchId and self.gpioId and not self.km:
+            # Only start KM after all the adaptors are connected
             self.km = CbKitchenMinder(self)
             # km.update not implemented yet & LoopingCall has been problematic. Commented-out.
             #t = task.LoopingCall(self.km.update)
             #t.start(1.0)
             self._setState('running')
-            self.cbLog("info", " -------Started KM---------")
+            self.cbLog("info", " ------- All devices connected. Started KM ---------")
 
     def onAdaptorData(self, msg):
         self.cbLog("debug", "onAdaptorData,  message: " + str(msg))
